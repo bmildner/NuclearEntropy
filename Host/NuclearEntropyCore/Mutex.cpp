@@ -27,12 +27,10 @@
 
 #include <cassert>
 
-ATTD_BOOST_INCL_GUARD_BEGIN
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/locks.hpp>
-ATTD_BOOST_INCL_GUARD_END
 
-namespace AutomatedTokenTestDevice
+namespace NuclearEntropy
 {
 
   namespace Detail
@@ -68,5 +66,5 @@ namespace AutomatedTokenTestDevice
   {
   }
 
-}  // namespace AutomatedTokenTestDevice
+}  // namespace NuclearEntropy
 

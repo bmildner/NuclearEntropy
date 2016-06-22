@@ -28,19 +28,17 @@
 #include <locale>
 #include <iomanip>
 
-ATTD_BOOST_INCL_GUARD_BEGIN
 #include <boost/format.hpp>
-#if !defined(ATTD_SYSTEM_WINDOWS) && !defined(ATTD_SYSTEM_POSIX)
+#if !defined(NUCENT_SYSTEM_WINDOWS) && !defined(NUCENT_SYSTEM_POSIX)
 # include <boost/thread/thread.hpp>
 #endif
-ATTD_BOOST_INCL_GUARD_END
 
-#ifdef ATTD_SYSTEM_WINDOWS
+#ifdef NUCENT_SYSTEM_WINDOWS
 # define WIN32_LEAN_AND_MEAN
 # include <Windows.h>
 #endif
 
-#ifdef ATTD_SYSTEM_POSIX
+#ifdef NUCENT_SYSTEM_POSIX
 extern "C"
 {
 # include <time.h>
@@ -49,11 +47,11 @@ extern "C"
 
 using namespace std;
 
-namespace AutomatedTokenTestDevice
+namespace NuclearEntropy
 {
   namespace Detail
   {
-#ifdef ATTD_SYSTEM_WINDOWS
+#ifdef NUCENT_SYSTEM_WINDOWS
     string Win32ErrorToString(uint32_t error)
     {
       string reason;
@@ -108,9 +106,9 @@ namespace AutomatedTokenTestDevice
 
   void ThreadSleepMs(uint32_t ms)
   {
-#if defined(ATTD_SYSTEM_WINDOWS)
+#if defined(NUCENT_SYSTEM_WINDOWS)
     ::Sleep(ms);
-#elif defined(ATTD_SYSTEM_POSIX)
+#elif defined(NUCENT_SYSTEM_POSIX)
     // we do not want to depend on built boost libraryies on Posix
     timespec delay;
 
@@ -123,5 +121,5 @@ namespace AutomatedTokenTestDevice
 #endif
   }
 
-}  // namespace AutomatedTokenTestDevice
+}  // namespace NuclearEntropy
 

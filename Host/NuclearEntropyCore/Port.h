@@ -23,25 +23,23 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef AUTOMATEDTOKENTESTDEVICE_PORT_H
-#define AUTOMATEDTOKENTESTDEVICE_PORT_H
+#ifndef NUCLEARENTROPY_PORT_H
+#define NUCLEARENTROPY_PORT_H
 
 #include "NuclearEntropyCore/Config.h"
 
 #include <string>
 
-ATTD_BOOST_INCL_GUARD_BEGIN
 #include <boost/utility.hpp>
-ATTD_BOOST_INCL_GUARD_END
 
 #include "NuclearEntropyCore/Mutex.h"
 #include "NuclearEntropyCore/Types.h"
 #include "NuclearEntropyCore/Exceptions.h"
 
-namespace AutomatedTokenTestDevice
+namespace NuclearEntropy
 {
 
-  class ATTD_API Port : boost::noncopyable
+  class NUCENT_API Port : boost::noncopyable
   {
     public:
       enum PortNumbers {COM1 = 1, COM2, COM3, COM4, COM5, COM6, COM7, COM8, COM9, COM10, COM11, COM12, COM13, COM14, COM15, COM16, COM17, COM18, COM19, COM20,
@@ -120,7 +118,7 @@ namespace AutomatedTokenTestDevice
   };
 
 
-  class ATTD_API PortRuntimeError : public RuntimeError
+  class NUCENT_API PortRuntimeError : public RuntimeError
   {
     protected:
       explicit PortRuntimeError(const std::string& message)
@@ -129,27 +127,27 @@ namespace AutomatedTokenTestDevice
       };
   };
 
-  class ATTD_API PortNotSupportedError : public PortRuntimeError
+  class NUCENT_API PortNotSupportedError : public PortRuntimeError
   {
     public:
       explicit PortNotSupportedError(const Port & port, const std::string& message)
       : PortRuntimeError(message + "  not supported for port " + port.GetPortName())
       {
-        SetErrorCode(ATTD_ERR_PORT_NOT_SUPPORTED);
+        SetErrorCode(NUCENT_ERR_PORT_NOT_SUPPORTED);
       };
   };
 
-  class ATTD_API PortAPIError : public PortRuntimeError
+  class NUCENT_API PortAPIError : public PortRuntimeError
   {
     public:
       explicit PortAPIError(const std::string& message, const std::string& portName = std::string())
       : PortRuntimeError("API error for port (" + (portName.empty() ? "<none>" : portName) + ": " + message)
       {
-        SetErrorCode(ATTD_ERR_PORT_API_ERROR);
+        SetErrorCode(NUCENT_ERR_PORT_API_ERROR);
       };
   };
 
-  class ATTD_API PortOpenError : public PortRuntimeError
+  class NUCENT_API PortOpenError : public PortRuntimeError
   {
     protected:
       explicit PortOpenError(const std::string& message)
@@ -158,47 +156,47 @@ namespace AutomatedTokenTestDevice
       };
   };
 
-  class ATTD_API PortOpenFailed : public PortOpenError
+  class NUCENT_API PortOpenFailed : public PortOpenError
   {
     public:
       explicit PortOpenFailed(const Port& port, const std::string& reason)
       : PortOpenError("failed to open port (" + port.GetPortName() + ") due to \"" + reason + "\"")
       {
-        SetErrorCode(ATTD_ERR_PORT_OPEN_FAILED);
+        SetErrorCode(NUCENT_ERR_PORT_OPEN_FAILED);
       };
   };
 
-  class ATTD_API PortNotFound : public PortOpenError
+  class NUCENT_API PortNotFound : public PortOpenError
   {
     public:
       explicit PortNotFound(const std::string& portName)
       : PortOpenError("port not found (" + portName + ")")
       {
-        SetErrorCode(ATTD_ERR_PORT_NOT_FOUND);
+        SetErrorCode(NUCENT_ERR_PORT_NOT_FOUND);
       };
   };
 
-  class ATTD_API PortNameInvalid : public PortOpenError
+  class NUCENT_API PortNameInvalid : public PortOpenError
   {
     public:
       explicit PortNameInvalid(const std::string& portName)
       : PortOpenError("invalid port name (" + portName + ")")
       {
-        SetErrorCode(ATTD_ERR_PORT_INVALID_NAME);
+        SetErrorCode(NUCENT_ERR_PORT_INVALID_NAME);
       };
   };
 
-  class ATTD_API PortConfigFailed : public PortRuntimeError
+  class NUCENT_API PortConfigFailed : public PortRuntimeError
   {
     public:
       explicit PortConfigFailed(const Port& port, const std::string& message = "")
       : PortRuntimeError("failed to configure port (" + port.GetPortName() + ")" + (!message.empty() ? " " + message : ""))
       {
-        SetErrorCode(ATTD_ERR_PORT_CONFIG_ERROR);
+        SetErrorCode(NUCENT_ERR_PORT_CONFIG_ERROR);
       };
   };
 
-  class ATTD_API PortIOError : public PortRuntimeError
+  class NUCENT_API PortIOError : public PortRuntimeError
   {
     protected:
       explicit PortIOError(const std::string& message)
@@ -207,67 +205,67 @@ namespace AutomatedTokenTestDevice
       };
   };
 
-  class ATTD_API PortBreakSignal : public PortIOError
+  class NUCENT_API PortBreakSignal : public PortIOError
   {
     public:
       explicit PortBreakSignal(const Port& port)
       : PortIOError("Break detected on port (" + port.GetPortName() + ")")
       {
-        SetErrorCode(ATTD_ERR_PORT_BREAK_SIGNAL);
+        SetErrorCode(NUCENT_ERR_PORT_BREAK_SIGNAL);
       };
   };
 
-  class ATTD_API PortFrameError : public PortIOError
+  class NUCENT_API PortFrameError : public PortIOError
   {
     public:
       explicit PortFrameError(const Port& port)
       : PortIOError("Frame error detected on port (" + port.GetPortName() + ")")
       {
-        SetErrorCode(ATTD_ERR_PORT_FRAME_ERROR);
+        SetErrorCode(NUCENT_ERR_PORT_FRAME_ERROR);
       };
   };
 
-  class ATTD_API PortOverflowError : public PortIOError
+  class NUCENT_API PortOverflowError : public PortIOError
   {
     public:
       explicit PortOverflowError(const Port& port)
       : PortIOError("Buffer overflow or overrun error detected on port (" + port.GetPortName() + ")")
       {
-        SetErrorCode(ATTD_ERR_PORT_OVERFLOW_ERROR);
+        SetErrorCode(NUCENT_ERR_PORT_OVERFLOW_ERROR);
       };
   };
 
-  class ATTD_API PortParityError: public PortIOError
+  class NUCENT_API PortParityError: public PortIOError
   {
     public:
       explicit PortParityError(const Port& port)
       : PortIOError("Parity error detected on port (" + port.GetPortName() + ")")
       {
-        SetErrorCode(ATTD_ERR_PORT_PARITY_ERROR);
+        SetErrorCode(NUCENT_ERR_PORT_PARITY_ERROR);
       };
   };
 
-  class ATTD_API PortWriteFailed : public PortIOError
+  class NUCENT_API PortWriteFailed : public PortIOError
   {
     public:
       explicit PortWriteFailed(const Port& port, const std::string& errorText)
       : PortIOError("write operation failed on port (" + port.GetPortName() + ") with error \"" + errorText + "\"")
       {
-        SetErrorCode(ATTD_ERR_PORT_WRITE_ERROR);
+        SetErrorCode(NUCENT_ERR_PORT_WRITE_ERROR);
       };
   };
 
-  class ATTD_API PortReadFailed : public PortIOError
+  class NUCENT_API PortReadFailed : public PortIOError
   {
     public:
       explicit PortReadFailed(const Port& port, const std::string& errorText)
       : PortIOError("read operation failed on port (" + port.GetPortName() + ") with error \"" + errorText + "\"")
       {
-        SetErrorCode(ATTD_ERR_PORT_READ_ERROR);
+        SetErrorCode(NUCENT_ERR_PORT_READ_ERROR);
       };
   };
 
-  class ATTD_API PortTimeout : public PortIOError
+  class NUCENT_API PortTimeout : public PortIOError
   {
     protected:
       explicit PortTimeout(const std::string& message)
@@ -276,27 +274,27 @@ namespace AutomatedTokenTestDevice
       };
   };
 
-  class ATTD_API PortWriteTimeout : public PortTimeout
+  class NUCENT_API PortWriteTimeout : public PortTimeout
   {
     public:
       explicit PortWriteTimeout(const Port& port)
       : PortTimeout("write operation on port (" + port.GetPortName() + ") timed out")
       {
-        SetErrorCode(ATTD_ERR_PORT_WRITE_TIMEOUT);
+        SetErrorCode(NUCENT_ERR_PORT_WRITE_TIMEOUT);
       };
   };
 
-  class ATTD_API PortReadTimeout : public PortTimeout
+  class NUCENT_API PortReadTimeout : public PortTimeout
   {
     public:
       explicit PortReadTimeout(const Port& port)
       : PortTimeout("read operation on port (" + port.GetPortName() + ") timed out")
       {
-        SetErrorCode(ATTD_ERR_PORT_READ_TIMEOUT);
+        SetErrorCode(NUCENT_ERR_PORT_READ_TIMEOUT);
       };
   };
 
-  class ATTD_API PortLogicError : public LogicError
+  class NUCENT_API PortLogicError : public LogicError
   {
     protected:
       explicit PortLogicError(const std::string& message)
@@ -305,17 +303,17 @@ namespace AutomatedTokenTestDevice
       };
   };
 
-  class ATTD_API PortInvalidParam : public PortLogicError
+  class NUCENT_API PortInvalidParam : public PortLogicError
   {
     public:
       explicit PortInvalidParam(const std::string& message)
       : PortLogicError("Invalid parameter" + (message.empty() ? "" : " (" + message + ")"))
       {
-        SetErrorCode(ATTD_ERR_INVALID_PARAM);
+        SetErrorCode(NUCENT_ERR_INVALID_PARAM);
       };
   };
 
-}  // namespace AutomatedTokenTestDevice
+}  // namespace NuclearEntropy
 
 #endif
 

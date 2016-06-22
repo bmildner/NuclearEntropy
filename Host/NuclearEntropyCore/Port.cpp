@@ -33,7 +33,7 @@
 
 using namespace std;
 
-namespace AutomatedTokenTestDevice
+namespace NuclearEntropy
 {
   const unsigned Port::scm_DefaultRetries = 10;
   const unsigned Port::scm_DefaultDelay = 50;

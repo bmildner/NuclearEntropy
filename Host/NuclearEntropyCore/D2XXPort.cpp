@@ -25,16 +25,15 @@
 
 #include "NuclearEntropyCore/D2XXPort.h"
 
-#ifdef ATTD_SYSTEM_WINDOWS  // only compile on Windows
+#ifdef NUCENT_SYSTEM_WINDOWS  // only compile on Windows
 
 #include <cassert>
 #include <iomanip>
 #include <vector>
 
-ATTD_BOOST_INCL_GUARD_BEGIN
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
-ATTD_BOOST_INCL_GUARD_END
+#include <boost/numeric/conversion/cast.hpp>
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -47,7 +46,7 @@ using namespace std;
 
 namespace
 {
-  using namespace AutomatedTokenTestDevice;
+  using namespace NuclearEntropy;
 
   typedef vector<FT_DEVICE_LIST_INFO_NODE> DeviceInfoList;
 
@@ -127,7 +126,7 @@ namespace
   }
 }  // namespace
 
-namespace AutomatedTokenTestDevice
+namespace NuclearEntropy
 {
   struct D2XXPort::SystemHandle
   {
@@ -639,7 +638,7 @@ namespace AutomatedTokenTestDevice
       return false;
     }
 
-    bool result = !!FT_W32_WriteFile(**this->m_SystemHandle, const_cast<Byte*>(&(*first)), last - first, &sent, 0);
+    bool result = !!FT_W32_WriteFile(**this->m_SystemHandle, const_cast<Byte*>(&(*first)), boost::numeric_cast<DWORD>(last - first), &sent, 0);
 
     assert(sent <= static_cast<DWORD>(last - first));
 
@@ -700,7 +699,7 @@ namespace AutomatedTokenTestDevice
 
     DWORD bytesRead = 0;
 
-    bool result = !!FT_W32_ReadFile(**this->m_SystemHandle, &data[0], length, &bytesRead, 0);
+    bool result = !!FT_W32_ReadFile(**this->m_SystemHandle, &data[0], boost::numeric_cast<DWORD>(length), &bytesRead, 0);
 
     assert(bytesRead <= length);
 
@@ -848,7 +847,7 @@ namespace AutomatedTokenTestDevice
     return Detail::Win32ErrorToString(FT_W32_GetLastError(**m_SystemHandle));
   }
 
-}  // namespace AutomatedTokenTestDevice
+}  // namespace NuclearEntropy
 
-#endif  // ATTD_SYSTEM_WINDOWS
+#endif  // NUCENT_SYSTEM_WINDOWS
 

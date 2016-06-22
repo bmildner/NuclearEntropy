@@ -23,8 +23,8 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef AUTOMATEDTOKENTESTDEVICE_CONFIG_H
-#define AUTOMATEDTOKENTESTDEVICE_CONFIG_H
+#ifndef NUCLEARENTROPY_CONFIG_H
+#define NUCLEARENTROPY_CONFIG_H
 
 // detect system
 # ifdef __cplusplus
@@ -45,9 +45,9 @@ extern "C"
 # endif
 
 # if defined(_WIN32)
-#  define ATTD_SYSTEM_WINDOWS
+#  define NUCENT_SYSTEM_WINDOWS
 # elif defined(_POSIX_VERSION) || defined(_POSIX_SOURCE) || defined(_POSIX_C_SOURCE)
-#  define ATTD_SYSTEM_POSIX
+#  define NUCENT_SYSTEM_POSIX
 # else
 #  error "Unknown System"
 # endif
@@ -55,15 +55,15 @@ extern "C"
 
 // detect compiler and set configuration
 # ifdef _MSC_VER
-#  if defined ATTD_BUILD_DLL
-#    define ATTD_API __declspec(dllexport)
-#  elif !defined ATTD_STATIC_LIB
-#   define ATTD_API __declspec(dllimport)
+#  if defined NUCENT_BUILD_DLL
+#    define NUCENT_API __declspec(dllexport)
+#  elif !defined NUCENT_STATIC_LIB
+#   define NUCENT_API __declspec(dllimport)
 #  else
-#   define ATTD_API
+#   define NUCENT_API
 #  endif
 
-#  define ATTD_UNUSED(x) /*__pragma(warning(suppress:4100))*/ x
+#  define NUCENT_UNUSED(x) /*__pragma(warning(suppress:4100))*/ x
 
 #  ifndef _CRT_SECURE_NO_WARNINGS
 #   define _CRT_SECURE_NO_WARNINGS
@@ -73,43 +73,24 @@ extern "C"
 #   define _SCL_SECURE_NO_WARNINGS
 #  endif
 
+#  define NUCENT_SUPPRESS_EXPORT_WARNING __pragma(warning(suppress:4251 4275))
+
 # elif defined(__GNUC__)
 
-#  define ATTD_UNUSED(x) (void) x
-#  define ATTD_API  // TODO: set properly for GCC
+#  define NUCENT_UNUSED(x) (void) x
+#  define NUCENT_API  // TODO: set properly for GCC
+
+#  define NUCENT_SUPPRESS_EXPORT_WARNING
 
 # elif defined(__clang__)
 
-#  define ATTD_UNUSED(x) (void) x
-#  define ATTD_API  // TODO: set properly for Clang / LLVM
+#  define NUCENT_UNUSED(x) (void) x
+#  define NUCENT_API  // TODO: set properly for Clang / LLVM
+
+#  define NUCENT_SUPPRESS_EXPORT_WARNING
 
 # else
 #  error "Unknown compiler"
 # endif
 
-
-// "inclusion guard" macros for boost headers, dreaded MSVC 2010 code analysis causes lots of warnings in boost headers ...
-// Warning: MSVC 2010 code analysis causes warnings even in std. library headers for some stuff .... not really useful!
-# ifdef _MSC_VER
-#  include <codeanalysis\warnings.h>
-
-#  define ATTD_BOOST_INCL_GUARD_BEGIN  __pragma(warning(push))                                 \
-                                       __pragma(warning(disable: ALL_CODE_ANALYSIS_WARNINGS))  \
-                                       __pragma(warning(disable: 4512))  /* warning C4512: 'boost::io::detail::group5<T1,T2,T3,T4,T5>' : assignment operator could not be generated */ 
-
-#  define ATTD_BOOST_INCL_GUARD_END    __pragma(warning(pop))
-
-#  define ATTD_BOOST_NO_FOREACH_WARNINGS_BEGIN __pragma(warning(push))  \
-                                               __pragma(warning(disable: 6246))  /* warning C6246: Local declaration of '_foreach_col' hides declaration of the same name in outer scope. For additional information, see previous declaration at line '521' of 'd:\exchange\test\automatedtokentestdevice\automatedtokentestdevice\automatedtokentestdevice.cpp' */
-
-#  define ATTD_BOOST_NO_FOREACH_WARNINGS_END   __pragma(warning(pop))
-
-# else
-#  define ATTD_BOOST_INCL_GUARD_BEGIN
-#  define ATTD_BOOST_INCL_GUARD_END
-#  define ATTD_BOOST_NO_FOREACH_WARNINGS_BEGIN
-#  define ATTD_BOOST_NO_FOREACH_WARNINGS_END
-# endif
-
 #endif
-

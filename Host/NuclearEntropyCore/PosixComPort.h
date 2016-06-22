@@ -23,12 +23,12 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef AUTOMATEDTOKENTESTDEVICE_POSIXCOMPORT_H
-#define AUTOMATEDTOKENTESTDEVICE_POSIXCOMPORT_H
+#ifndef NUCLEARENTROPY_POSIXCOMPORT_H
+#define NUCLEARENTROPY_POSIXCOMPORT_H
 
 #include "NuclearEntropyCore/Config.h"
 
-#ifdef ATTD_SYSTEM_POSIX  // only compile on POSIX
+#ifdef NUCENT_SYSTEM_POSIX  // only compile on POSIX
 
 #include <map>
 #include <string>
@@ -36,10 +36,10 @@
 
 #include "NuclearEntropyCore/Port.h"
 
-namespace AutomatedTokenTestDevice
+namespace NuclearEntropy
 {
 
-  class ATTD_API PosixComPort: public Port
+  class NUCENT_API PosixComPort: public Port
   {
     public:
       typedef HandleType<PosixComPort>::Type Handle;
@@ -89,9 +89,9 @@ namespace AutomatedTokenTestDevice
     private:
   };
 
-}  // namespace AutomatedTokenTestDevice
+}  // namespace NuclearEntropy
 
-#endif // ATTD_SYSTEM_POSIX
+#endif // NUCENT_SYSTEM_POSIX
 
 #endif
 

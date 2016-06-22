@@ -23,8 +23,8 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef AUTOMATEDTOKENTESTDEVICE_UTILITY_H
-#define AUTOMATEDTOKENTESTDEVICE_UTILITY_H
+#ifndef NUCLEARENTROPY_UTILITY_H
+#define NUCLEARENTROPY_UTILITY_H
 
 #include "NuclearEntropyCore/Config.h"
 
@@ -32,22 +32,22 @@
 
 #include "NuclearEntropyCore/Types.h"
 
-namespace AutomatedTokenTestDevice
+namespace NuclearEntropy
 {
   namespace Detail
   {
-#ifdef ATTD_SYSTEM_WINDOWS
+#ifdef NUCENT_SYSTEM_WINDOWS
     std::string Win32ErrorToString(uint32_t error);
 #endif
   }
 
-  ATTD_API std::string WideToNarrowString(const std::wstring& str);
+  NUCENT_API std::string WideToNarrowString(const std::wstring& str);
 
-  ATTD_API std::wstring NarrowToWideString(const std::string& str);
+  NUCENT_API std::wstring NarrowToWideString(const std::string& str);
 
-  ATTD_API void ThreadSleepMs(uint32_t ms);
+  NUCENT_API void ThreadSleepMs(uint32_t ms);
 
-}  // namespace AutomatedTokenTestDevice
+}  // namespace NuclearEntropy
 
 #endif
 

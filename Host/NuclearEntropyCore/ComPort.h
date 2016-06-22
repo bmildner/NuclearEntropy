@@ -23,12 +23,12 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef AUTOMATEDTOKENTESTDEVICE_COMPORT_H
-#define AUTOMATEDTOKENTESTDEVICE_COMPORT_H
+#ifndef NUCLEARENTROPY_COMPORT_H
+#define NUCLEARENTROPY_COMPORT_H
 
 #include "NuclearEntropyCore/Config.h"
 
-#ifdef ATTD_SYSTEM_WINDOWS  // only compile on Windows
+#ifdef NUCENT_SYSTEM_WINDOWS  // only compile on Windows
 
 #include <map>
 #include <string>
@@ -36,10 +36,10 @@
 
 #include "NuclearEntropyCore/Port.h"
 
-namespace AutomatedTokenTestDevice
+namespace NuclearEntropy
 {
 
-  class ATTD_API ComPort: public Port
+  class NUCENT_API ComPort: public Port
   {
     public:
       typedef HandleType<ComPort>::Type Handle;
@@ -91,9 +91,9 @@ namespace AutomatedTokenTestDevice
     private:
   };
 
-}  // namespace AutomatedTokenTestDevice
+}  // namespace NuclearEntropy
 
-#endif  // ATTD_SYSTEM_WINDOWS
+#endif  // NUCENT_SYSTEM_WINDOWS
 
 #endif
 

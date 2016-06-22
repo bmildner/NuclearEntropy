@@ -23,8 +23,8 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef AUTOMATEDTOKENTESTDEVICE_EXCEPTION_H
-#define AUTOMATEDTOKENTESTDEVICE_EXCEPTION_H
+#ifndef NUCLEARENTROPY_EXCEPTION_H
+#define NUCLEARENTROPY_EXCEPTION_H
 
 #include "NuclearEntropyCore/Config.h"
 
@@ -33,61 +33,63 @@
 
 #include "NuclearEntropyCore/ErrorCodes.h"
 
-namespace AutomatedTokenTestDevice
+namespace NuclearEntropy
 {
 
   namespace Detail
   {
-    class ATTD_API Exception
+    class NUCENT_API Exception
     {
       public:
-        Exception(ATTD_Error error)
+        Exception(NUCENT_Error error)
         : m_ErrorCode(error)
         {};
 
         virtual ~Exception()
         {};
 
-        virtual void SetErrorCode(ATTD_Error error)
+        virtual void SetErrorCode(NUCENT_Error error)
         {
           m_ErrorCode = error;
         };
 
-        virtual ATTD_Error GetErrorCode() const
+        virtual NUCENT_Error GetErrorCode() const
         {
           return m_ErrorCode;
         };
 
       protected:
-        ATTD_Error m_ErrorCode;
+        NUCENT_Error m_ErrorCode;
 
       private:
     };
   }  // namespace Detail
 
-  class ATTD_API RuntimeError : public std::runtime_error, public Detail::Exception
+  NUCENT_SUPPRESS_EXPORT_WARNING
+  class NUCENT_API RuntimeError : public std::runtime_error, public Detail::Exception
   {
     protected:
       explicit RuntimeError(const std::string& message)
-      : std::runtime_error(message), Exception(ATTD_ERR_GENERAL_ERROR)
+      : std::runtime_error(message), Exception(NUCENT_ERR_GENERAL_ERROR)
       {
       };
 
       virtual ~RuntimeError() throw() {};  // looks like the std.lib. of GCC 4.6.3 uses "virtual ~exception() throw() {}"
   };
 
-  class ATTD_API LogicError : public std::logic_error, public Detail::Exception
+  NUCENT_SUPPRESS_EXPORT_WARNING
+  class NUCENT_API LogicError : public std::logic_error, public Detail::Exception
   {
     protected:
       explicit LogicError(const std::string& message)
-      : logic_error(message), Exception(ATTD_ERR_GENERAL_ERROR)
+      : logic_error(message), Exception(NUCENT_ERR_GENERAL_ERROR)
       {
       };
 
       virtual ~LogicError() throw() {};  // looks like the std.lib. of GCC 4.6.3 uses "virtual ~exception() throw() {}"
   };
 
-}  // namespace AutomatedTokenTestDevice
+}  // namespace NuclearEntropy
 
 #endif
 

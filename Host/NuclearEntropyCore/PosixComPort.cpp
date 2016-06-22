@@ -25,7 +25,7 @@
 
 #include "NuclearEntropyCore/PosixComPort.h"
 
-#ifdef ATTD_SYSTEM_POSIX  // only compile on POSIX systems
+#ifdef NUCENT_SYSTEM_POSIX  // only compile on POSIX systems
 
 #include <cassert>
 #include <cstring>
@@ -38,9 +38,7 @@
 #include <errno.h>   /* Error number definitions */
 #include <termios.h> /* POSIX terminal control definitions */
 
-ATTD_BOOST_INCL_GUARD_BEGIN
 #include <boost/format.hpp>
-ATTD_BOOST_INCL_GUARD_END
 
 
 using namespace std;
@@ -53,7 +51,7 @@ namespace
   }
 }
 
-namespace AutomatedTokenTestDevice
+namespace NuclearEntropy
 {
 
   struct PosixComPort::SystemHandle
@@ -356,13 +354,13 @@ namespace AutomatedTokenTestDevice
     }
 
 #if defined(CRTSCTS)
-# define ATTD_RTSCTS CRTSCTS
+# define NUCENT_RTSCTS CRTSCTS
 #elif defined(CNEW_RTSCTS)
-# define ATTD_RTSCTS CNEW_RTSCTS
+# define NUCENT_RTSCTS CNEW_RTSCTS
 #endif
 
-#ifdef ATTD_RTSCTS
-    options.c_cflag &= ~ATTD_RTSCTS;  // disable RTS/CTS flow control
+#ifdef NUCENT_RTSCTS
+    options.c_cflag &= ~NUCENT_RTSCTS;  // disable RTS/CTS flow control
 #endif
 
     // disable XON/XOFF flow control
@@ -383,10 +381,10 @@ namespace AutomatedTokenTestDevice
     }
 
     // enable RTS/CTS flow control
-#ifdef ATTD_RTSCTS
+#ifdef NUCENT_RTSCTS
     if ((flowControl & FlowControl_RTS_CTS) != 0)
     {
-      options.c_cflag |= ATTD_RTSCTS;
+      options.c_cflag |= NUCENT_RTSCTS;
     }
 #else
     if ((flowControl & FlowControl_RTS_CTS) != 0)
@@ -406,7 +404,7 @@ namespace AutomatedTokenTestDevice
     }
   }
 
-#undef ATTD_RTSCTS
+#undef NUCENT_RTSCTS
 
   void PosixComPort::GetTimeout(unsigned& readTimeout, unsigned& writeTimeout) const
   {
@@ -441,7 +439,7 @@ namespace AutomatedTokenTestDevice
     }
 
     options.c_cc[VTIME] = readTimeout / 100;
-    ATTD_UNUSED(writeTimeout);  // write timeout is unused
+    NUCENT_UNUSED(writeTimeout);  // write timeout is unused
 
     if (tcsetattr(**this->m_SystemHandle, TCSADRAIN, &options) == -1)
     {
@@ -604,7 +602,7 @@ namespace AutomatedTokenTestDevice
     return PosixErrorToString(errno);
   }
 
-}  // namespace AutomatedTokenTestDevice
+}  // namespace NuclearEntropy
 
-#endif  // ATTD_SYSTEM_POSIX
+#endif  // NUCENT_SYSTEM_POSIX
 

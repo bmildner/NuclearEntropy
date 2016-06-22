@@ -25,15 +25,14 @@
 
 #include "NuclearEntropyCore/ComPort.h"
 
-#ifdef ATTD_SYSTEM_WINDOWS  // only compile on Windows
+#ifdef NUCENT_SYSTEM_WINDOWS  // only compile on Windows
 
 #include <cassert>
 #include <iomanip>
 
-ATTD_BOOST_INCL_GUARD_BEGIN
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
-ATTD_BOOST_INCL_GUARD_END
+#include <boost/numeric/conversion/cast.hpp>
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -44,7 +43,7 @@ using namespace std;
 
 namespace
 {
-  using namespace AutomatedTokenTestDevice;
+  using namespace NuclearEntropy;
 
   string PortNumberToName(ComPort::PortNumber port)
   {
@@ -52,7 +51,7 @@ namespace
   }
 }  // namespace
 
-namespace AutomatedTokenTestDevice
+namespace NuclearEntropy
 {
 
   struct ComPort::SystemHandle : boost::noncopyable
@@ -150,7 +149,7 @@ namespace AutomatedTokenTestDevice
         throw PortNameInvalid(portName);
       }
 
-      portNumber += pos;
+      portNumber += boost::numeric_cast<DWORD>(pos);
     }
 
     return CreateHandle(portNumber);
@@ -418,7 +417,7 @@ namespace AutomatedTokenTestDevice
 
     DWORD sent = 0;
 
-    bool result = !!WriteFile(**this->m_SystemHandle, &(*first), last - first, &sent, 0);
+    bool result = !!WriteFile(**this->m_SystemHandle, &(*first), boost::numeric_cast<DWORD>(last - first), &sent, 0);
 
     assert(sent <= static_cast<DWORD>(last - first));
 
@@ -462,7 +461,7 @@ namespace AutomatedTokenTestDevice
 
     DWORD bytesRead = 0;
 
-    bool result = !!ReadFile(**this->m_SystemHandle, &data[0], length, &bytesRead, 0);
+    bool result = !!ReadFile(**this->m_SystemHandle, &data[0], boost::numeric_cast<DWORD>(length), &bytesRead, 0);
 
     assert(bytesRead <= length);
 
@@ -539,7 +538,7 @@ namespace AutomatedTokenTestDevice
     return Detail::Win32ErrorToString(GetLastError());
   }
 
-}  // namespace AutomatedTokenTestDevice
+}  // namespace NuclearEntropy
 
-#endif  // ATTD_SYSTEM_WINDOWS
+#endif  // NUCENT_SYSTEM_WINDOWS
 

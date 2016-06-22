@@ -23,18 +23,16 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef AUTOMATEDTOKENTESTDEVICE_MUTEX_H
-#define AUTOMATEDTOKENTESTDEVICE_MUTEX_H
+#ifndef NUCLEARENTROPY_MUTEX_H
+#define NUCLEARENTROPY_MUTEX_H
 
 #include "NuclearEntropyCore/Config.h"
 
-ATTD_BOOST_INCL_GUARD_BEGIN
 #include <boost/utility.hpp>
-ATTD_BOOST_INCL_GUARD_END
 
 #include "NuclearEntropyCore/Types.h"
 
-namespace AutomatedTokenTestDevice
+namespace NuclearEntropy
 {
 
   class Mutex;
@@ -44,7 +42,7 @@ namespace AutomatedTokenTestDevice
     struct MutexImpl;
     struct LockImpl;
 
-    class ATTD_API Lock : boost::noncopyable
+    class NUCENT_API Lock : boost::noncopyable
     {
       public:
         Lock(const Mutex& mutex);
@@ -59,7 +57,7 @@ namespace AutomatedTokenTestDevice
 
   }
 
-  class ATTD_API Mutex
+  class NUCENT_API Mutex
   {
     public:
       typedef Detail::Lock LockType;
@@ -69,14 +67,15 @@ namespace AutomatedTokenTestDevice
     protected:
       friend class Detail::Lock;
 
-      typedef HandleType<Detail::MutexImpl>::Type Implementation;      
+      typedef HandleType<Detail::MutexImpl>::Type Implementation;
 
+      NUCENT_SUPPRESS_EXPORT_WARNING
       Implementation m_Implementation;
 
     private:
   };
 
-}  // namespace AutomatedTokenTestDevice
+}  // namespace NuclearEntropy
 
 #endif
 

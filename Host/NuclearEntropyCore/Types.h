@@ -23,8 +23,8 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef AUTOMATEDTOKENTESTDEVICE_TYPE_H
-#define AUTOMATEDTOKENTESTDEVICE_TYPE_H
+#ifndef NUCLEARENTROPY_TYPE_H
+#define NUCLEARENTROPY_TYPE_H
 
 #include "NuclearEntropyCore/Config.h"
 
@@ -37,16 +37,16 @@ extern "C"
 }
 
 #if (__cplusplus <= 199711L) && !(defined(_MSC_VER) && (_MSC_VER >= 1600))  // MSVC 2010 has std::shared_ptr<> but signals old C++ standard
-# define AUTOMATEDTOKENTESTDEVICE_USE_BOOST_SHARED_PTR
+# define NUCENT_USE_BOOST_SHARED_PTR
 #endif
 
-#ifdef AUTOMATEDTOKENTESTDEVICE_USE_BOOST_SHARED_PTR
+#ifdef NUCENT_USE_BOOST_SHARED_PTR
 # include <boost/shared_ptr.hpp>
 #else
 # include <memory>
 #endif
 
-namespace AutomatedTokenTestDevice
+namespace NuclearEntropy
 {
   typedef unsigned char      Byte;
   typedef std::vector<Byte>  Buffer;
@@ -54,13 +54,13 @@ namespace AutomatedTokenTestDevice
   template <typename T>
   struct HandleType
   {
-#ifdef AUTOMATEDTOKENTESTDEVICE_USE_BOOST_SHARED_PTR
+#ifdef NUCENT_USE_BOOST_SHARED_PTR
     typedef boost::shared_ptr<T> Type;
 #else
     typedef std::shared_ptr<T> Type;
 #endif
   };
-}  // namespace AutomatedTokenTestDevice
+}  // namespace NuclearEntropy
 
 #endif
 
