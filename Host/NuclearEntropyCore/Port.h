@@ -1,4 +1,4 @@
-// Copyright (c) 2011 - 2013 by Bertolt Mildner
+// Copyright (c) 2011 - 2016 by Bertolt Mildner
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -59,7 +59,7 @@ namespace NuclearEntropy
 
       enum Timeout     {DefaultReadTimeout = 500, DefaultWriteTimeout = 500};
 
-      enum PortErrors  {OverflowError = 0x01, FrameError = 0x02, ParityError = 0x04, BreakSignal = 0x08};
+      enum PortError   {NoError = 0x00, OverflowError = 0x01, FrameError = 0x02, ParityError = 0x04, BreakSignal = 0x08};
 
       enum PortBuffer  {ReceiveBuffer = 1, TransmitBuffer, AllBuffers = TransmitBuffer | ReceiveBuffer};
 
@@ -79,7 +79,7 @@ namespace NuclearEntropy
 
       virtual void Purge(PortBuffer buffer = AllBuffers) const = 0;
 
-      virtual PortErrors ClearPortError() const = 0;
+      virtual PortError ClearPortError() const = 0;
       virtual void HandleAndClearPortError() const;
 
       // TODO: probably change errorhandling strategy to not error out in Send() on port error (but what about a break signal!) !?!?!?!?!?

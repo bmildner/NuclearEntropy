@@ -1,4 +1,4 @@
-// Copyright (c) 2012 - 2013 by Bertolt Mildner
+// Copyright (c) 2012 - 2016 by Bertolt Mildner
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without

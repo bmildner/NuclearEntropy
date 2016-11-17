@@ -5,46 +5,19 @@
  *  Author: Berti
  */ 
 
- #include "GeigerTube.h"
+#include "GeigerTube.h"
+
+#include <assert.h>
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+
+#include <util/atomic.h>
 
 #include "Types.h"
 #include "RingBuffer.h"
 #include "Configuration.h"
 #include "Usart.h"
-
-
-#ifndef ICIE3  // seems to be missing ...
-# define ICIE3 ICIE1
-#else
-# error remove workaround!
-#endif
-
-#ifndef ICIE4  // seems to be missing ...
-# define ICIE4 ICIE3
-#else
-# error remove workaround!
-#endif
-
-#ifndef CS40  // seems to be missing ...
-# define  CS40 CS30
-#else
-# error remove workaround!
-#endif
-
-#ifndef CS41  // seems to be missing ...
-# define  CS41 CS31
-#else
-# error remove workaround!
-#endif
-
-#ifndef CS42  // seems to be missing ...
-# define  CS42 CS32
-#else
-# error remove workaround!
-#endif
 
 
 #define PORT_HVEN PORTB
@@ -60,48 +33,60 @@
 
 typedef enum {Off, On, TestMode} State;
 
+typedef enum {None = 0, Entropy = 1, Raw = 2, CPS = 4} OutputFormat;
+
+
 typedef struct
 {
   uint16_t m_InputCaptureValue;
   uint16_t m_CounterValue;
   uint16_t m_OverflowConter;
-} TimeStamp;
+} RawTimeStamp;
 
 
-#define TIME_STAMP_BUFFER_SIZE      5
-#define TIME_STAMP_BUFFER_BYTE_SIZE (sizeof(TimeStamp) * TIME_STAMP_BUFFER_SIZE)
+#define TIME_STAMP_BUFFER_SIZE      8
+#define TIME_STAMP_BUFFER_BYTE_SIZE (sizeof(RawTimeStamp) * TIME_STAMP_BUFFER_SIZE)
 
 static NO_INIT Byte g_TimeStampBufferMemory1[sizeof(RingBuffer) + TIME_STAMP_BUFFER_BYTE_SIZE];
-static RingBuffer* g_TimeStampBuffer1 = (RingBuffer*) g_TimeStampBufferMemory1;
-
 static NO_INIT Byte g_TimeStampBufferMemory2[sizeof(RingBuffer) + TIME_STAMP_BUFFER_BYTE_SIZE];
-static RingBuffer* g_TimeStampBuffer2 = (RingBuffer*) g_TimeStampBufferMemory2;
-
 static NO_INIT Byte g_TimeStampBufferMemory3[sizeof(RingBuffer) + TIME_STAMP_BUFFER_BYTE_SIZE];
-static RingBuffer* g_TimeStampBuffer3 = (RingBuffer*) g_TimeStampBufferMemory3;
+
+
+typedef struct
+{
+  const uint8_t m_TubeNumber;
+  RingBuffer*   m_RawTimeStampBuffer;
+  Bool          m_BufferOverflow;
+  uint32_t      m_LastTimestamp;
+} TubeState;
 
 
 static uint16_t g_Tube1OverflowCount = 0;
 static uint16_t g_Tube2OverflowCount = 0;
 static uint16_t g_Tube3OverflowCount = 0;
 
-// TODO: add buffer overflow handling
-static Bool g_Tube1BufferOverflow = FALSE;
-static Bool g_Tube2BufferOverflow = FALSE;
-static Bool g_Tube3BufferOverflow = FALSE;
 
-static State g_State = Off;
+static State        g_State        = Off;
+static OutputFormat g_OutputFormat = Raw;
+
+static TubeState g_TubeStates[MAX_NUMBER_OF_TUBES] = {{.m_TubeNumber = 1, .m_RawTimeStampBuffer = (RingBuffer*) g_TimeStampBufferMemory1, .m_BufferOverflow = FALSE, .m_LastTimestamp = 0}, 
+                                                      {.m_TubeNumber = 2, .m_RawTimeStampBuffer = (RingBuffer*) g_TimeStampBufferMemory2, .m_BufferOverflow = FALSE, .m_LastTimestamp = 0}, 
+                                                      {.m_TubeNumber = 3, .m_RawTimeStampBuffer = (RingBuffer*) g_TimeStampBufferMemory3, .m_BufferOverflow = FALSE, .m_LastTimestamp = 0}};
 
 
 static void Enable(Bool testMode);
+
+static void ProcessTimestamp(TubeState* pTubeState, const RawTimeStamp* pTimeStamp);
+static PURE_FUNCTION size_t RequiredUARTBufferSize();
 
 
 void GeigerTube_Initialize()
 {
   // initialize time stamp buffers
-  RingBuffer_Init(g_TimeStampBuffer1, TIME_STAMP_BUFFER_BYTE_SIZE);
-  RingBuffer_Init(g_TimeStampBuffer2, TIME_STAMP_BUFFER_BYTE_SIZE);
-  RingBuffer_Init(g_TimeStampBuffer3, TIME_STAMP_BUFFER_BYTE_SIZE);
+  for (uint8_t count = 0; count < MAX_NUMBER_OF_TUBES; count++)
+  {
+    RingBuffer_Init(g_TubeStates[count].m_RawTimeStampBuffer, TIME_STAMP_BUFFER_BYTE_SIZE);
+  }
 
   // initialize HV_EN pin (PB1, output, active low)
   PORT_HVEN |= (1 << HVEN);
@@ -111,7 +96,7 @@ void GeigerTube_Initialize()
   PORT_TESTSIGNAL &= ~(1 << TESTSIGNAL);
   DDR_TESTSIGNAL |= (1 << TESTSIGNAL);
 
-  // setup test signal on pin OC0A (166,66 Hz, duty-cycle 50:50)
+  // TC0, setup test signal on pin OC0A (166,66 Hz, duty-cycle 50:50)
   TCCR0A = (1 << WGM01) | (1 << COM0A0);  // mode 2/CTC, toggle OC0A on compare match
   TCCR0B = 0x00;                          // mode 2/CTC, clock off
   TIMSK0 = 0x00;                          // no interrupts
@@ -155,33 +140,36 @@ void Enable(Bool testMode)
   GTCCR = (1 << TSM) | (1 << PSRSYNC);
 
   // Tube 1 / Timer 1
-  TCNT1 = 0x0000;                 // reset counter values
-  g_Tube1OverflowCount = 0x0000;  // reset overflow counter
-  g_Tube1BufferOverflow = FALSE;  // reset buffer overflow flag
-  TIFR1 = 0xff;                   // reset interrupt flags
+  if (g_pConfiguration->m_IsTubeEnabled[0])
+  {
+    TCNT1 = 0x0000;                            // reset counter values
+    g_Tube1OverflowCount = 0x0000;             // reset overflow counter
+    g_TubeStates[0].m_BufferOverflow = FALSE;  // reset buffer overflow flag
+    TIFR1 = 0xff;                              // reset interrupt flags
 
-  TIMSK1 |= (1 << ICIE1) | (1 << TOIE1);  // enable Input Capture Interrupt and Input Capture Interrupt
-  TCCR1B |= (1 << CS10);                  // enable timer clocks with no prescaler
+    TIMSK1 |= (1 << ICIE1) | (1 << TOIE1);  // enable Input Capture Interrupt and Input Capture Interrupt
+    TCCR1B |= (1 << CS10);                  // enable timer clocks with no prescaler
+  }
 
   // Tube 2 / Timer 3
-  if (g_pConfiguration->m_Tube2Enabled)
+  if (g_pConfiguration->m_IsTubeEnabled[1])
   {
-    TCNT3 = 0x0000;                 // reset counter values
-    g_Tube2OverflowCount = 0x0000;  // reset overflow counter
-    g_Tube2BufferOverflow = FALSE;  // reset buffer overflow flag
-    TIFR3 = 0xff;                   // reset interrupt flags
+    TCNT3 = 0x0000;                            // reset counter values
+    g_Tube2OverflowCount = 0x0000;             // reset overflow counter
+    g_TubeStates[1].m_BufferOverflow = FALSE;  // reset buffer overflow flag
+    TIFR3 = 0xff;                              // reset interrupt flags
 
     TIMSK3 |= (1 << ICIE3) | (1 << TOIE3);  // enable Input Capture Interrupt and Input Capture Interrupt
     TCCR3B |= (1 << CS30);                  // enable timer clocks with no prescaler
   }
 
   // Tube 3 / Timer 4
-  if (g_pConfiguration->m_Tube3Enabled)
+  if (g_pConfiguration->m_IsTubeEnabled[2])
   {
-    TCNT4 = 0x0000;                 // reset counter values
-    g_Tube3OverflowCount = 0x0000;  // reset overflow counter
-    g_Tube3BufferOverflow = FALSE;  // reset buffer overflow flag
-    TIFR4 = 0xff;                   // reset interrupt flags
+    TCNT4 = 0x0000;                            // reset counter values
+    g_Tube3OverflowCount = 0x0000;             // reset overflow counter
+    g_TubeStates[2].m_BufferOverflow = FALSE;  // reset buffer overflow flag
+    TIFR4 = 0xff;                              // reset interrupt flags
 
     TIMSK4 |= (1 << ICIE4) | (1 << TOIE4);  // enable Input Capture Interrupt and Input Capture Interrupt
     TCCR4B |= (1 << CS40);                  // enable timer clocks with no prescaler
@@ -239,57 +227,90 @@ void GeigerTube_DoWork()
     return;
   }
 
-  typedef struct  
+  RawTimeStamp timeStamp;
+
+  // iterate over all tubes and check if there is a time stamp in the queue (+ check if we can send if needed)
+  for (uint8_t count = 0; count < MAX_NUMBER_OF_TUBES; count++)
   {
-    uint8_t   m_Tube;
-    TimeStamp m_TimeStamp;
-  } RawData;
+    if ((g_pConfiguration->m_IsTubeEnabled[count]) &&
+        (RingBuffer_GetUsedSize_Locked(g_TubeStates[count].m_RawTimeStampBuffer) >= sizeof(timeStamp)) &&
+        (USART_GetFreeTXBufferSize() >= RequiredUARTBufferSize()))
+    {
+      RingBuffer_GetN_Locked(g_TubeStates[count].m_RawTimeStampBuffer, sizeof(timeStamp), &timeStamp);
 
-  RawData rawData;
+      ProcessTimestamp(&g_TubeStates[count], &timeStamp);
+    }
+  }
+}
 
-  if ((RingBuffer_GetUsedSize_Locked(g_TimeStampBuffer1) >= sizeof(TimeStamp)) &&
-      (USART_GetFreeTXBufferSize() >= sizeof(RawData)))
+// hold-off in CPU clock cycles for overflow counter fixup
+#define OVERFLOW_FIXUP_HOLDOFF 10  // actually this currently does not account for entering the ISR ...
+
+void ProcessTimestamp(TubeState* pTubeState, const RawTimeStamp* pTimeStamp)
+{
+  assert(pTubeState != NULL);
+  assert(pTimeStamp != NULL);
+
+  uint32_t overflowCount;
+
+  // try to correct for timer overflow between event and ISR execution
+  if ((pTimeStamp->m_CounterValue < pTimeStamp->m_InputCaptureValue) && 
+      (pTimeStamp->m_CounterValue > OVERFLOW_FIXUP_HOLDOFF))
   {
-    rawData.m_Tube = 1;
-
-    RingBuffer_GetN_Locked(g_TimeStampBuffer1, sizeof(rawData.m_TimeStamp), &rawData.m_TimeStamp);
-
-    USART_Send(sizeof(rawData), &rawData);
+    overflowCount = pTimeStamp->m_OverflowConter - 1;
+  }
+  else
+  {
+    overflowCount = pTimeStamp->m_OverflowConter;
   }
 
-  if ((g_pConfiguration->m_Tube2Enabled) &&
-      (RingBuffer_GetUsedSize_Locked(g_TimeStampBuffer2) >= sizeof(TimeStamp)) &&
-      (USART_GetFreeTXBufferSize() >= sizeof(RawData)))
+  pTubeState->m_LastTimestamp = (overflowCount * 0xffff) + pTimeStamp->m_InputCaptureValue;
+
+
+  // send RAW data
+  if (g_OutputFormat & Raw)
   {
-    rawData.m_Tube = 2;
+    Bool overflow;
 
-    RingBuffer_GetN_Locked(g_TimeStampBuffer2, sizeof(rawData.m_TimeStamp), &rawData.m_TimeStamp);
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+    {
+      overflow = pTubeState->m_BufferOverflow;
+      pTubeState->m_BufferOverflow = FALSE;
+    }
 
-    USART_Send(sizeof(rawData), &rawData);
+    USART_SendByte(Raw);
+    USART_Send(sizeof(pTubeState->m_TubeNumber), &pTubeState->m_TubeNumber);
+    USART_Send(sizeof(overflow), &overflow);
+    USART_Send(sizeof(*pTimeStamp), pTimeStamp);
+  }
+}
+
+size_t RequiredUARTBufferSize()
+{
+  size_t size = 0;
+
+  if (g_OutputFormat & Raw)
+  {
+    // type tag + tube number + overflow + timestamp
+    size += sizeof(uint8_t) + sizeof(((TubeState*) 0)->m_TubeNumber) + sizeof(Bool) + sizeof(RawTimeStamp);
   }
 
-  if ((g_pConfiguration->m_Tube3Enabled) &&
-  (RingBuffer_GetUsedSize_Locked(g_TimeStampBuffer3) >= sizeof(TimeStamp)) &&
-  (USART_GetFreeTXBufferSize() >= sizeof(RawData)))
-  {
-    rawData.m_Tube = 2;
-
-    RingBuffer_GetN_Locked(g_TimeStampBuffer3, sizeof(rawData.m_TimeStamp), &rawData.m_TimeStamp);
-
-    USART_Send(sizeof(rawData), &rawData);
-  }
+  return size;
 }
 
 
 ISR(TIMER1_CAPT_vect)
 {
-  TimeStamp timeStamp;
+  RawTimeStamp timeStamp;
 
   timeStamp.m_InputCaptureValue = ICR1;
   timeStamp.m_CounterValue = TCNT1;
   timeStamp.m_OverflowConter = g_Tube1OverflowCount;
 
-  g_Tube1BufferOverflow = !RingBuffer_PutN_Inl(g_TimeStampBuffer1, sizeof(timeStamp), &timeStamp);
+  if (!RingBuffer_PutN_Inl(g_TubeStates[0].m_RawTimeStampBuffer, sizeof(timeStamp), &timeStamp))
+  {
+    g_TubeStates[0].m_BufferOverflow = TRUE;
+  }
 }
 
 ISR(TIMER1_OVF_vect)
@@ -300,13 +321,16 @@ ISR(TIMER1_OVF_vect)
 
 ISR(TIMER3_CAPT_vect)
 {
-  TimeStamp timeStamp;
+  RawTimeStamp timeStamp;
 
   timeStamp.m_InputCaptureValue = ICR3;
   timeStamp.m_CounterValue = TCNT3;
   timeStamp.m_OverflowConter = g_Tube2OverflowCount;
 
-  g_Tube2BufferOverflow = !RingBuffer_PutN_Inl(g_TimeStampBuffer2, sizeof(timeStamp), &timeStamp);
+  if (!RingBuffer_PutN_Inl(g_TubeStates[1].m_RawTimeStampBuffer, sizeof(timeStamp), &timeStamp))
+  {
+    g_TubeStates[1].m_BufferOverflow = TRUE;
+  }
 }
 
 ISR(TIMER3_OVF_vect)
@@ -317,13 +341,16 @@ ISR(TIMER3_OVF_vect)
 
 ISR(TIMER4_CAPT_vect)
 {
-  TimeStamp timeStamp;
+  RawTimeStamp timeStamp;
 
   timeStamp.m_InputCaptureValue = ICR4;
   timeStamp.m_CounterValue = TCNT4;
   timeStamp.m_OverflowConter = g_Tube3OverflowCount;
 
-  g_Tube3BufferOverflow = !RingBuffer_PutN_Inl(g_TimeStampBuffer3, sizeof(timeStamp), &timeStamp);
+  if (!RingBuffer_PutN_Inl(g_TubeStates[2].m_RawTimeStampBuffer, sizeof(timeStamp), &timeStamp))
+  {
+    g_TubeStates[2].m_BufferOverflow = TRUE;
+  }
 }
 
 ISR(TIMER4_OVF_vect)

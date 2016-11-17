@@ -24,11 +24,16 @@ typedef Byte Bool;
 # define TRUE 1
 #endif
 
-
+// TODO: find/make better place for these ...
 
 #define ALWAYS_INLINE __attribute__((always_inline)) inline
+#define NEVER_INLINE  __attribute__((noinline))
+
+#define PURE_FUNCTION __attribute__((pure))
 
 #define NO_INIT __attribute__ ((section (".noinit")))
+
+#define NO_RETURN __attribute__ ((noreturn))
 
 #define UNITTEST_ASSERT(x) if (!(x)) {asm volatile ("break"); return FALSE;}
 

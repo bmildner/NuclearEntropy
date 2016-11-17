@@ -1,4 +1,4 @@
-// Copyright (c) 2011 - 2013 by Bertolt Mildner
+// Copyright (c) 2011 - 2016 by Bertolt Mildner
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -470,7 +470,7 @@ namespace NuclearEntropy
     return result;
   }
 
-  Port::PortErrors ComPort::ClearPortError() const
+  Port::PortError ComPort::ClearPortError() const
   {
     Mutex::LockType lock(m_Mutex);
 
@@ -478,31 +478,31 @@ namespace NuclearEntropy
 
     if (ClearCommError(**m_SystemHandle, &err, 0))
     {
-      PortErrors errors = PortErrors(0);
+      PortError errors = NoError;
 
       if ((err & CE_OVERRUN) != 0)
       {
-        errors = static_cast<PortErrors>(errors | OverflowError);
+        errors = static_cast<PortError>(errors | OverflowError);
       }
 
       if ((err & CE_RXOVER) != 0)
       {
-        errors = static_cast<PortErrors>(errors | OverflowError);
+        errors = static_cast<PortError>(errors | OverflowError);
       }
 
       if ((err & CE_FRAME) != 0)
       {
-        errors = static_cast<PortErrors>(errors | FrameError);
+        errors = static_cast<PortError>(errors | FrameError);
       }
 
       if ((err & CE_RXPARITY) != 0)
       {
-        errors = static_cast<PortErrors>(errors | ParityError);
+        errors = static_cast<PortError>(errors | ParityError);
       }
 
       if ((err & CE_BREAK) != 0)
       {
-        errors = static_cast<PortErrors>(errors | BreakSignal);
+        errors = static_cast<PortError>(errors | BreakSignal);
       }
 
       return errors;

@@ -8,6 +8,7 @@
 #include "Configuration.h"
 
 #include <string.h>
+#include <assert.h>
 
 #include <avr/io.h>
 #include <avr/eeprom.h>
@@ -20,14 +21,14 @@
 typedef uint8_t  Version;
 typedef uint16_t CRC;
 
-#define CONFIG_VERSION_1 1
+#define CONFIG_VERSION_1    1
+#define MAX_NUMBER_OF_TUBES_VERSION_1 3
 
 typedef struct  
 {  
   Version m_Version;
 
-  Bool m_Tube2Enabled;
-  Bool m_Tube3Enabled;
+  Bool m_IsTubeEnabled[MAX_NUMBER_OF_TUBES_VERSION_1];
 
   CRC     m_CRC;
 } RawConfiguration_V1;
@@ -113,8 +114,10 @@ Bool Configuration_Set(const Configuration* pNewConfig)
 
 void SetDefaultValues(Configuration* pConfig)
 {
-  pConfig->m_Tube2Enabled = TRUE;
-  pConfig->m_Tube3Enabled = TRUE;
+  for (uint8_t count = 0; count < MAX_NUMBER_OF_TUBES; count++)
+  {
+    pConfig->m_IsTubeEnabled[count] = TRUE;
+  }
 }
 
 
@@ -130,8 +133,9 @@ Configuration ReadConfigV1(const uint8_t* offset)
   {
     config.m_State = Config_Read_OK;
 
-    config.m_Tube2Enabled = rawConfig.m_Tube2Enabled;
-    config.m_Tube3Enabled = rawConfig.m_Tube3Enabled;
+    assert(((sizeof(config.m_IsTubeEnabled) == sizeof(rawConfig.m_IsTubeEnabled)) == MAX_NUMBER_OF_TUBES) == MAX_NUMBER_OF_TUBES_VERSION_1);
+
+    memcpy(config.m_IsTubeEnabled, rawConfig.m_IsTubeEnabled, sizeof(config.m_IsTubeEnabled));
   }
   else
   {
@@ -147,8 +151,8 @@ Bool WriteConfigV1(uint8_t* offset, const Configuration* pNewConfig)
 
   rawConfig.m_Version = CONFIG_VERSION_1;
 
-  rawConfig.m_Tube2Enabled = pNewConfig->m_Tube2Enabled;
-  rawConfig.m_Tube3Enabled = pNewConfig->m_Tube3Enabled;
+  assert(((sizeof(rawConfig.m_IsTubeEnabled) == sizeof(pNewConfig->m_IsTubeEnabled)) == MAX_NUMBER_OF_TUBES) == MAX_NUMBER_OF_TUBES_VERSION_1);
+  memcpy(rawConfig.m_IsTubeEnabled, pNewConfig->m_IsTubeEnabled, sizeof(rawConfig.m_IsTubeEnabled));
 
   rawConfig.m_CRC = CalcCRCV1(&rawConfig);
 

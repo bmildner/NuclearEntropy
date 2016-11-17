@@ -1,4 +1,4 @@
-// Copyright (c) 2011 - 2013 by Bertolt Mildner
+// Copyright (c) 2011 - 2016 by Bertolt Mildner
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -40,7 +40,7 @@ namespace NuclearEntropy
 
   void Port::HandleAndClearPortError() const
   {
-    PortErrors errors = ClearPortError();
+    PortError errors = ClearPortError();
 
     // there may be multiple error reasons set
     // we will only report the first found!

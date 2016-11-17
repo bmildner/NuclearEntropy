@@ -1,4 +1,4 @@
-// Copyright (c) 2011 - 2013 by Bertolt Mildner
+// Copyright (c) 2011 - 2016 by Bertolt Mildner
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -73,7 +73,7 @@ namespace NuclearEntropy
 
       virtual std::string GetPortName() const;
 
-      virtual PortErrors ClearPortError() const;
+      virtual PortError ClearPortError() const;
 
     protected:
       struct SystemHandle;

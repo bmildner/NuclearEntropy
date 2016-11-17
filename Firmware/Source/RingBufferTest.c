@@ -10,19 +10,18 @@
 
  Bool RingBufferTest()
  {
-
-   {
+  {
  #define BUFFER_SIZE 8
-     Byte bufferMemory[sizeof(RingBuffer) + BUFFER_SIZE];
-     RingBuffer* pBuffer = (RingBuffer*) bufferMemory;
+    Byte bufferMemory[sizeof(RingBuffer) + BUFFER_SIZE];
+    RingBuffer* pBuffer = (RingBuffer*) bufferMemory;
 
-     RingBuffer_Init(pBuffer, BUFFER_SIZE);
+    RingBuffer_Init(pBuffer, BUFFER_SIZE);
  
-     UNITTEST_ASSERT(RingBuffer_GetSize_Inl(pBuffer) == BUFFER_SIZE);
-     UNITTEST_ASSERT(RingBuffer_GetUsedSize_Inl(pBuffer) == 0);
-     UNITTEST_ASSERT(RingBuffer_GetFreeSize_Inl(pBuffer) == BUFFER_SIZE);
+    UNITTEST_ASSERT(RingBuffer_GetSize_Inl(pBuffer) == BUFFER_SIZE);
+    UNITTEST_ASSERT(RingBuffer_GetUsedSize_Inl(pBuffer) == 0);
+    UNITTEST_ASSERT(RingBuffer_GetFreeSize_Inl(pBuffer) == BUFFER_SIZE);
 
-     RingBuffer_Put_Inl(pBuffer, 0xab);
+    RingBuffer_Put_Inl(pBuffer, 0xab);
 
     UNITTEST_ASSERT(RingBuffer_GetSize_Inl(pBuffer) == BUFFER_SIZE);
     UNITTEST_ASSERT(RingBuffer_GetUsedSize_Inl(pBuffer) == 1);

@@ -10,6 +10,7 @@
 
 #include "Types.h"
 
+#define MAX_NUMBER_OF_TUBES 3
 
 typedef enum {Config_Empty = 0, Config_Read_OK, Config_Read_Fallback, Config_Read_Bad} ConfigurationState;
 
@@ -17,8 +18,7 @@ typedef struct
 {
   ConfigurationState m_State;
 
-  Bool m_Tube2Enabled;
-  Bool m_Tube3Enabled;
+  Bool m_IsTubeEnabled[MAX_NUMBER_OF_TUBES];
 } Configuration;
 
 

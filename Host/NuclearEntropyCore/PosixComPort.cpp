@@ -1,4 +1,4 @@
-// Copyright (c) 2011 - 2013 by Bertolt Mildner
+// Copyright (c) 2011 - 2016 by Bertolt Mildner
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -581,13 +581,13 @@ namespace NuclearEntropy
     }
   }
 
-  Port::PortErrors PosixComPort::ClearPortError() const
+  Port::PortError PosixComPort::ClearPortError() const
   {
     Mutex::LockType lock(m_Mutex);
 
     // TODO: how to detect break signal, parity, frame overflow and underflow errors !????
 
-    return PortErrors(0);
+    return NoError;
   }
 
   string PosixComPort::GetPortName() const

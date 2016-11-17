@@ -8,6 +8,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/atomic.h>
+#include <avr/sfr_defs.h>
 
 #define BAUD 1152000  // 1.152Mbps
 #include <util/setbaud.h>
@@ -44,7 +45,7 @@
 #define MIN_FREE_RX_BUFFER_SIZE 2
 
 #define RX_BUFFER_SIZE 64
-#define TX_BUFFER_SIZE 64
+#define TX_BUFFER_SIZE 256
 
 
 static NO_INIT Byte g_RXBufferMemory[sizeof(RingBuffer) + RX_BUFFER_SIZE];
@@ -136,7 +137,33 @@ void USART_Send(uint16_t count, const void* pData)
 
 uint16_t USART_Receive(uint16_t count, void* pData)
 {
-  return RingBuffer_GetN_Locked(g_pRXBuffer, count, pData);
+  uint16_t bytesRead = RingBuffer_GetN_Locked(g_pRXBuffer, count, pData);
+
+  uint16_t freeSize;
+
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+  {
+    freeSize = RingBuffer_GetFreeSize_Inl(g_pRXBuffer);
+  }
+
+  if (freeSize > MIN_FREE_RX_BUFFER_SIZE)
+  {
+    PORT_CTS &= ~(1 << CTS);
+  }
+
+  return bytesRead;
+}
+
+void USART_PurgeTXBuffer()
+{
+  // wait for TX buffer to be empty
+  while (RingBuffer_GetUsedSize_Locked(g_pTXBuffer) > 0);
+
+  // wait for Data Register Empty interrupt to be disabled by ISR
+  while (bit_is_set(UCSR0B, UDRIE0));
+
+  // wait for Transmit Complete flag
+  while (bit_is_clear(UCSR0A, TXC0));
 }
 
 void USART_SetDSR()
@@ -170,6 +197,7 @@ void USART_ClearRI()
 }
 
 
+// monitor RTS pin
 ISR(INT0_vect)
 {
   if (PIN_RTS & (1 << RTS))

@@ -63,17 +63,9 @@ int main(void)
   Initialize();
 
 
-
-
-
-  MISC_GetResetReason();
-
-
-
-
   DoSelfTest();  // TODO: check selftest result
 
-  MISC_WatchdogReset();
+  MISC_WatchdogTimerReset();
 
   USART_SetDSR();
 
@@ -84,7 +76,7 @@ int main(void)
 
   while (TRUE)
   {
-    MISC_WatchdogReset();
+    MISC_WatchdogTimerReset();
     Command_DoWork();
     GeigerTube_DoWork();
   }
